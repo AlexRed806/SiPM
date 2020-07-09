@@ -177,9 +177,9 @@ fig_name = "Timestamp_Dt_" + sipm_name + "_OV" + ov + ".pdf"
 fig.savefig(fig_name)
 
 
-#############################
-## Timestamp & DeltaT plot ##
-#############################
+###################
+## Amplitue plot ##
+###################
 fig, axes = plt.subplots()
 figure_title = sipm_name + "  -  OV = " + str(ov) + "V"
 axes.set_title(figure_title)
@@ -187,20 +187,47 @@ axes.set_yscale("log")
 axes.set_ylabel("counts")
 axes.set_xlabel("Amplitude (V)")
 # gets the bin content and center to find maxima..
-bin_content, bin_center, _ = axes.hist(table_minima["Amplitude"],histtype="step",bins=1000)
-bin_width = bin_center[1]-bin_center[0]
-bin_center = bin_center+bin_width/2.
+bin_content, bin_edge, _ = axes.hist(table_minima["Amplitude"],histtype="step",bins=10000)
+# calculate bin center from bin edge
+bin_width = bin_edge[1]-bin_edge[0]
+bin_center = bin_edge+bin_width/2.
+# adjust length (bin center was taken from edges so it's n+1)
 bin_center = bin_center[:-1]
-max_bin = []
-max_bin.append(bin_center[bin_content==max(bin_content))
-max_bin.append()
+bin_center_dictionary = {}
+for idx in range(len(bin_center)):
+    bin_center_dictionary[bin_center[idx]] = idx
+
+def find_hist_peaks(bin_center, bin_content):
+    if max(bin_content) < 2:
+        print max_bin_center
+        return
+        #return max_bin_list
+
+    max_bin = bin_center[bin_content==max(bin_content)][0]
+    max_bin_center.append(max_bin)
+    print max_bin
+    print max_bin_center
+
+    start_searching_from = max_bin + max_bin_center[0]/2.
+    new_bin_center = bin_center[bin_center>start_searching_from]
+    new_bin_content = bin_content[bin_center>start_searching_from]
+
+    find_hist_peaks(new_bin_center, new_bin_content)
+
+max_bin_center = []
+find_hist_peaks(bin_center, bin_content)
+print max_bin_center
+max_list = [bin_center_dictionary[bc] for bc in max_bin_center]
+print max_list
+
+#sys.exit()
 #.. then find those maxima, excluding bins where the content is 1..
 # (max list is a list of indexes showing where the maxima are in bin_content)
 #max_list = argrelextrema(bin_content[:len(bin_content)-10], np.greater_equal, order=30)[0]
-max_list, _ = scipy.signal.find_peaks(bin_content[:len(bin_content)-10],prominence=3)
-print max_list
-max_list = max_list[bin_content[max_list]>1]
-print max_list
+# max_list, _ = scipy.signal.find_peaks(bin_content[:len(bin_content)-10],prominence=3)
+# print max_list
+# max_list = max_list[bin_content[max_list]>1]
+# print max_list
 #.. and finaly plots the peaks as a scatter plot
 axes.scatter(bin_center[max_list],bin_content[max_list], marker='o', s=100, c='g')
 # now get y axis range before plotting fit on top
@@ -224,7 +251,7 @@ for max_index in max_list:
     try:
         popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000)
         axes.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
-    except: print "Failed at fitting peak on",max_index,"bin!"
+    except: print "Failed at fitting peak on bin",max_index,"!"
 # here it reapplies the range found before the gaussian fits were made
 axes.set_ylim(my_ylim)
 # and finally shows the plot

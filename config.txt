@@ -1,0 +1,13 @@
+---- Baseline ----
+baseline_method=first_points
+baseline_n_points=200
+---- Minima ----
+minimum_method=baseline_gap
+minimum_search_range=100
+minimum_back_shift=200
+minimum_n_points=50
+minimum_gap=0.005
+minimum_n_close=100
+---- Plots ----
+show_plot=False
+save_plot=False

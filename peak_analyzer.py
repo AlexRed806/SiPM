@@ -56,4 +56,4 @@ time_n_bins = 1000
 _peak_.plot_times(time_n_bins,True,True,sipm_name,ov)
 
 ampl_n_bins = 1000
-_peak_.plot_amplitude(ampl_n_bins,True,True,sipm_name,ov,True)
+_peak_.plot_amplitude(ampl_n_bins,True,True,sipm_name,ov,True,True)

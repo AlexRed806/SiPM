@@ -187,26 +187,24 @@ axes.set_yscale("log")
 axes.set_ylabel("counts")
 axes.set_xlabel("Amplitude (V)")
 # gets the bin content and center to find maxima..
-bin_content, bin_edge, _ = axes.hist(table_minima["Amplitude"],histtype="step",bins=10000)
+bin_content, bin_edge, _ = axes.hist(table_minima["Amplitude"],histtype="step",bins=1000)
 # calculate bin center from bin edge
 bin_width = bin_edge[1]-bin_edge[0]
 bin_center = bin_edge+bin_width/2.
 # adjust length (bin center was taken from edges so it's n+1)
 bin_center = bin_center[:-1]
 bin_center_dictionary = {}
+# creates a dictionary to retrieve bin index from its central calue
 for idx in range(len(bin_center)):
     bin_center_dictionary[bin_center[idx]] = idx
 
+# define a function that recursively looks for maxima in sliding slices of the histogram
 def find_hist_peaks(bin_center, bin_content):
-    if max(bin_content) < 2:
-        print max_bin_center
+    if max(bin_content) < 3:
         return
-        #return max_bin_list
 
     max_bin = bin_center[bin_content==max(bin_content)][0]
     max_bin_center.append(max_bin)
-    print max_bin
-    print max_bin_center
 
     start_searching_from = max_bin + max_bin_center[0]/2.
     new_bin_center = bin_center[bin_center>start_searching_from]
@@ -214,46 +212,50 @@ def find_hist_peaks(bin_center, bin_content):
 
     find_hist_peaks(new_bin_center, new_bin_content)
 
+# now create a list of bins, call the function to fill it, and retrieve the list of indexes using the dictionary
 max_bin_center = []
 find_hist_peaks(bin_center, bin_content)
-print max_bin_center
 max_list = [bin_center_dictionary[bc] for bc in max_bin_center]
-print max_list
 
-#sys.exit()
-#.. then find those maxima, excluding bins where the content is 1..
-# (max list is a list of indexes showing where the maxima are in bin_content)
-#max_list = argrelextrema(bin_content[:len(bin_content)-10], np.greater_equal, order=30)[0]
-# max_list, _ = scipy.signal.find_peaks(bin_content[:len(bin_content)-10],prominence=3)
-# print max_list
-# max_list = max_list[bin_content[max_list]>1]
-# print max_list
 #.. and finaly plots the peaks as a scatter plot
-axes.scatter(bin_center[max_list],bin_content[max_list], marker='o', s=100, c='g')
-# now get y axis range before plotting fit on top
+axes.scatter(bin_center[max_list],bin_content[max_list], marker='x', s=10, c='g')
+# before plotting fit on top of the histogram, retrievew y axis range
 my_ylim = axes.get_ylim()
 
 # define here our gaussian function
 def gaussian(x, amplitude, mean, stdev):
     return amplitude / stdev * np.sqrt(2*np.pi) * np.exp( - ( (x - mean) / (stdev*np.sqrt(2)) )**2 )
 
+# define the index width in which to fit every peak
+index_width = int((max_list[1]-max_list[0])/2)
+
+# open a file to store fit DataFrame
+ofile_name =  "pe_fit_" + sipm_name + "_OV" + ov + ".txt"
+my_ofile = open(ofile_name,"w")
+print >> my_ofile, "pe mu sigma"
 # now loop over the maxima and fit them
+fit_counter = 1
 for max_index in max_list:
-    print max_index
     # define a range of bins to fit for every maximum
-    bin_range = [max(max_index-20,0),min(max_index+20,len(bin_center)-1)]
+    bin_range = [max(max_index-index_width,0),min(max_index+index_width,len(bin_center)-1)]
+    #print bin_center[bin_range]
     fit_bin_range = bin_center[bin_range[0]:bin_range[1]]
-    print fit_bin_range
     fit_bin_values = bin_content[bin_range[0]:bin_range[1]]
     # then fit them and plot the fit
-    #fit_bin_sigmas = np.where(np.sqrt(fit_bin_values)==0,1,np.sqrt(fit_bin_values))
-    # popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, sigma=fit_bin_sigmas, maxfev=10000)
     try:
-        popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000)
+        #fit_bounds = [ [0,np.inf],[min(fit_bin_range),max(fit_bin_range)],[0,np.inf] ]
+        fit_bounds = [ [0,min(fit_bin_range),0],[0.1,max(fit_bin_range),np.inf] ]
+        popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
+        print >> my_ofile, fit_counter, popt[1], popt[2]
         axes.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
     except: print "Failed at fitting peak on bin",max_index,"!"
+    fit_counter += 1
+print "Fitting results for different pe peaks saved in ",ofile_name,"\n"
+my_ofile.close()
 # here it reapplies the range found before the gaussian fits were made
 axes.set_ylim(my_ylim)
-# and finally shows the plot
+# and finally shows and saves the plot
 plt.tight_layout()
-plt.show()
+#plt.show()
+fig_name = "Amplitude_" + sipm_name + "_OV" + ov + ".pdf"
+fig.savefig(fig_name)

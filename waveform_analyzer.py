@@ -1,5 +1,5 @@
 import sys
-from Waveform_class import *
+from waveform_class import *
 
 #creates an object waveform of the waveform class
 #_waveform_ = Waveform(sys.argv[1],sys.argv[2],sys.argv[5] if len(sys.argv)==6 else 6250)

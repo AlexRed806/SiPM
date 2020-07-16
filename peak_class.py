@@ -31,8 +31,8 @@ class Peak ():
         self.table_minima["DeltaT"][self.table_minima["DeltaT"] < 0] = 1e-10
         # print the table
         if verbose:
-            print "Table of peaks"
-            print self.table_minima.describe(),"\n"
+            print("Table of peaks")
+            print(self.table_minima.describe(),"\n")
 
 
     def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, verbose=False):
@@ -65,24 +65,24 @@ class Peak ():
             #.. and puts all events between the former and the latter in a table called burst
             single_burst = after_saturation.loc[event_idx:end_of_burst]
             # now if this burst has more than 10 events..
-            if len(single_burst) > int(n_min_burst_ev):
+            if len(single_burst) > n_min_burst_ev:
                 # it calculates the time, and adds it up to the total time of bursts
                 single_burst_time = single_burst["Timestamp"].loc[end_of_burst] - single_burst["Timestamp"].loc[event_idx]
                 bursts_time += single_burst_time
                 # then adds the events in the list of indexes of bursts
                 burst_idx += list(single_burst.index)
 
-                print "Found a burst of",single_burst_time,"s, with",len(single_burst),"events in it -> excluded from the list of peaks"
+                print("Found a burst of",single_burst_time,"s, with",len(single_burst),"events in it -> excluded from the list of peaks")
         # print the table(s)
         if verbose:
-            print "\nTable of burst peaks"
-            print self.table_minima.loc[burst_idx],"\n"
+            print("\nTable of burst peaks")
+            print(self.table_minima.loc[burst_idx],"\n")
         # once the indexes of all peaks in bursts are stored, they are dropped from the global table of events
         self.table_minima = self.table_minima.drop(burst_idx)
         # now the job is done, burst peaks are removed from the stat
         if verbose:
-            print "New table of peaks"
-            print self.table_minima.describe(),"\n"
+            print("New table of peaks")
+            print(self.table_minima.describe(),"\n")
         return bursts_time
 
 
@@ -222,11 +222,11 @@ class Peak ():
                     popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
                     if save_fit_results: print >> my_ofile, fit_counter, popt[1], popt[2]
                     axes.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
-                except: print "Failed at fitting peak on bin",max_index,"!"
+                except: print("Failed at fitting peak on bin",max_index,"!")
                 fit_counter += 1
 
             if save_fit_results:
-                print "Fitting results for different pe peaks saved in ",ofile_name,"\n"
+                print("Fitting results for different pe peaks saved in ",ofile_name,"\n")
                 my_ofile.close()
         # here it reapplies the range found before the gaussian fits were made
         axes.set_ylim(my_ylim)

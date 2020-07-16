@@ -84,9 +84,10 @@ class Waveform ():
 
         #produce the waveform plots
         if do_plot:
-            ax.plot(ev_waveform.index, ev_waveform['CH1'], marker="2", linestyle="-", linewidth=1)
-            ax.scatter(ev_waveform.index, ev_waveform['min'], marker='o', s=50, c='r')
-            ax.scatter(ev_waveform.index, ev_waveform['clean_min'], marker='o', s=100, c='g')
+            #ax.plot(ev_waveform.index, ev_waveform['CH1'], marker="2", linestyle="-", linewidth=1)
+            ax.plot(ev_waveform.index, ev_waveform['CH1'], linestyle="-", linewidth=1)
+            ax.scatter(ev_waveform.index, ev_waveform['min'], marker='o', s=10, c='r')
+            ax.scatter(ev_waveform.index, ev_waveform['clean_min'], marker='o', s=50, c='g')
             ax.axhline(baseline, c='b')
             if show_plot: plt.show()
 
@@ -116,7 +117,7 @@ class Waveform ():
     def find_all_minima(self, n_ev, bsl_method, bsl_n_points, min_method, min_search_range=50, min_back_shift=100, min_n_points=100, min_gap=0.003, min_n_close = 100, show_plot=False, save_plot=False, folder_name='plots'):
 
         counter = 0
-        n_ev = (int)(max(n_ev,self.number_of_events))
+        n_ev = (int)(min(n_ev,self.number_of_events))
 
         if save_plot and not os.path.exists(folder_name): os.mkdir(folder_name)
 

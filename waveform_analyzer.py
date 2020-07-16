@@ -54,7 +54,7 @@ _wf_dict_ = wf_dict()
 
 
 #runs the algorithm
-n_ev = sys.argv[6] if (len(sys.argv)==7 and sys.argv[6]>0) else 1000000
+n_ev = int(sys.argv[6]) if (len(sys.argv)==7 and sys.argv[6]>0) else 1000000
 _waveform_.find_all_minima(n_ev,_wf_dict_["baseline_method"],(int)(_wf_dict_["baseline_n_points"]),(int)(_wf_dict_["minimum_method"]),(int)(_wf_dict_["minimum_search_range"]),(int)(_wf_dict_["minimum_back_shift"]),(int)(_wf_dict_["minimum_n_points"]),(float)(_wf_dict_["minimum_gap"]),(int)(_wf_dict_["minimum_n_close"]),_wf_dict_["show_plot"],_wf_dict_["save_plot"],sys.argv[5])
 
 _waveform_.save_minimum_table(sys.argv[5])

@@ -1,6 +1,19 @@
 import sys
 from waveform_class import *
 
+# print usage
+if len(sys.argv) != 6 and len(sys.argv) != 7:
+    print("\nUSAGE: python waveform_analyzer.py time_trend_file_path waveform_file_path waveform_n_points config_file_path output_name n_events")
+    print("\nARGUMENTS:")
+    print("time_trend_file_path:\t\t path to .csv file with time trend")
+    print("waveform_file_path:\t\t path to .csv file with waveform")
+    print("waveform_n_points:\t\t number of points in a waveform (e.g. 6250)")
+    print("config_file_path:\t\t path to configuration file (e.g. config.txt)")
+    print("output_name:\t\t\t name used to generate output files (e.g. SiPM00029)")
+    print("n_events:\t\t\t number of events to analyze (if missing, analyze the whole file)\n")
+    sys.exit()
+print("\n----------  WAVEFORM ANALYZER LAUNCHED  ----------\n")
+
 #creates an object waveform of the waveform class
 #_waveform_ = Waveform(sys.argv[1],sys.argv[2],sys.argv[5] if len(sys.argv)==6 else 6250)
 _waveform_ = Waveform(sys.argv[1],sys.argv[2],(int)(sys.argv[3]))

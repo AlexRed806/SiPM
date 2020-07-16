@@ -35,7 +35,7 @@ class Waveform ():
             if line.startswith("TIME"): n_line = line_counter
             line_counter += 1
             if line_counter == 100:
-                print "ERROR: header not found in", waveform_filename, "after the first 100 lines!"
+                print("ERROR: header not found in", waveform_filename, "after the first 100 lines!")
                 sys.exit(1)
         waveform_file.close()
         # then stores the waveform in a table
@@ -120,9 +120,9 @@ class Waveform ():
 
         if save_plot and not os.path.exists(folder_name): os.mkdir(folder_name)
 
-        print "-------------------------------------"
-        print "Analyzing the waveforms to get minima"
-        print "-------------------------------------"
+        print("-------------------------------------")
+        print("Analyzing the waveforms to get minima")
+        print("-------------------------------------")
         bar = progressbar.ProgressBar(maxval=n_ev, \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
         bar.start()
@@ -135,18 +135,18 @@ class Waveform ():
             if counter == n_ev-1: break
             counter+=1
         bar.finish()
-        print "-------------------------------------\n"
+        print("-------------------------------------\n")
 
 
     def save_minimum_table(self, table_name):
         pd.options.display.precision = 12
         '''name of the table without extention (wanna save in csv and txt)'''
         self.table_global = self.table_global[['Timestamp','Baseline','Amplitude']]
-        print "-------------------------------------"
-        print "           Table of minima           "
-        print "-------------------------------------"
+        print("-------------------------------------")
+        print("           Table of minima           ")
+        print("-------------------------------------")
         print(self.table_global)
-        print "-------------------------------------"
+        print("-------------------------------------")
         self.table_global.to_csv(table_name+".csv", header=True, index=False, sep=',')
         np.savetxt(table_name+".txt", self.table_global.values, fmt='%4.12f', delimiter=' ')
 
@@ -163,7 +163,7 @@ def clean_minima_method_0(waveform,index_list,n_previous=50,n_check=100,gap=0.00
             continue
         idx_start = 0 if index-n_previous-n_check < 0 else index-n_previous-n_check
         waveform_subset = waveform.iloc[idx_start+1:index-n_previous]
-        #print len(waveform_subset), waveform_subset["CH1"].mean()
+
         waveform_subset["CH1"] = waveform_subset["CH1"].astype(float)
 
         if ( abs(waveform_subset["CH1"].mean() - (float)(waveform["CH1"].iloc[index])) > gap ):
@@ -176,13 +176,6 @@ def clean_minima_method_1(waveform,index_list,baseline,gap=0.005,n_close=100):
     for index in index_list:
         if baseline - waveform["CH1"].iloc[index] > gap:# and len(waveform[index-1:index])-1 > n_close:
             idx_list_above_bsl.append(index)
-    # print idx_list_above_bsl
-    # if len(idx_list_above_bsl) > 1:
-    #     print "N close:",n_close
-    #     print len(waveform[index-1:index])-1
-    # for index in idx_list_above_bsl:
-    #     if len(waveform[index-1:index])-1 > n_close:
-    #         idx_list_clean.append(index)
     return idx_list_above_bsl
 
 

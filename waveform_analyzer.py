@@ -10,7 +10,7 @@ if len(sys.argv) != 6 and len(sys.argv) != 7:
     print("waveform_n_points:\t\t number of points in a waveform (e.g. 6250)")
     print("config_file_path:\t\t path to configuration file (e.g. config.txt)")
     print("output_name:\t\t\t name used to generate output files (e.g. SiPM00029)")
-    print("n_events:\t\t\t number of events to analyze (if missing, analyze the whole file)\n")
+    print("n_events (optional):\t\t number of events to analyze, or text file with event list (if missing, analyze the whole file)\n")
     sys.exit()
 print("\n----------  WAVEFORM ANALYZER LAUNCHED  ----------\n")
 
@@ -69,8 +69,10 @@ if len(sys.argv) == 7:
             text_file.close()
             event_list = [int(i) for i in lines[:-1]]
             print("You gave file with a list of ecents as input, analyzing",len(event_list),"events:", event_list)
-        except ValueError:
-            print("No valid input given for event list, analyzing all events")
+        except:
+            print("Please give a number of events or a path to file with event list, stopping")
+            sys.exit()
+else: print("No number of events specified, analyzing all events")
 
 _waveform_.find_all_minima(event_list,_wf_dict_["baseline_method"],(int)(_wf_dict_["baseline_n_points"]),(int)(_wf_dict_["minimum_method"]),(int)(_wf_dict_["minimum_search_range"]),(int)(_wf_dict_["minimum_back_shift"]),(int)(_wf_dict_["minimum_n_points"]),(float)(_wf_dict_["minimum_gap"]),(int)(_wf_dict_["minimum_n_close"]),_wf_dict_["show_plot"],_wf_dict_["save_plot"],sys.argv[5])
 

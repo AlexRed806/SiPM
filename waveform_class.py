@@ -63,21 +63,20 @@ class Waveform ():
         do_plot = show_plot or save_plot
         if do_plot: fig, ax = plt.subplots()
 
-        ev_waveform = self.table_waveform.loc[event*self.wf_data_points : event*self.wf_data_points+self.wf_data_points-1]
-        #ev_waveform["CH1"] = ev_waveform["CH1"].replace(to_replace="-inf",value=ev_waveform.min())
+        ev_waveform = self.table_waveform.loc[event*self.wf_data_points : event*self.wf_data_points+self.wf_data_points-1].copy()
+
         ev_waveform["CH1"].replace({(float)("-inf"): np.nanmin(ev_waveform[ev_waveform != -np.inf])}, inplace=True)
 
         minimum_list = argrelextrema(ev_waveform.CH1.values, np.less_equal, order=min_search_range)[0]
-        minimum_list = list(minimum_list)
-        #THIS IS WHERE THE WARNING IS
-        #ev_waveform.at[minimum_list, 'min'] = ev_waveform.loc[minimum_list, 'CH1']
-        #ev_waveform.loc[minimum_list].at['min'] = ev_waveform.loc[minimum_list, 'CH1']
-        #print(ev_waveform.at[minimum_list,"CH1"])
+
         ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
-        #ev_waveform.at[:,'min'] = ev_waveform.loc[minimum_list,'CH1']
-        #ev_waveform.insert(loc=minimum_list, column="min", value="CH1")
+        # alternative method
+        #minimum_list_idx = ev_waveform.iloc[minimum_list].index
+        #ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
 
         baseline = 0
+        # dct = {0: find_baseline_method_0, 1: find_baseline_method_1}
+        # baseline = dct[bsl_method](ev_waveform,bsl_n_points)
         if bsl_method==0: baseline = find_baseline_method_0(ev_waveform,bsl_n_points)
         elif bsl_method==1: baseline = find_baseline_method_1(ev_waveform,bsl_n_points)
 
@@ -86,6 +85,9 @@ class Waveform ():
         elif min_method==1: clean_minimum_list = clean_minima_method_1(ev_waveform,minimum_list,baseline,min_gap,min_n_close)
 
         ev_waveform.loc[:,'clean_min'] = ev_waveform.iloc[clean_minimum_list]['CH1']
+        # alternative method
+        #clean_minimum_list_idx = ev_waveform.iloc[clean_minimum_list].index
+        #ev_waveform.at[clean_minimum_list_idx,'clean_min'] = ev_waveform.loc[clean_minimum_list_idx]['CH1']
 
         #produce the waveform plots
         if do_plot:
@@ -143,7 +145,8 @@ class Waveform ():
             #if counter == n_ev-1: break
             counter+=1
         bar.finish()
-        print("-------------------------------------\n")
+        print("-------------------------------------")
+        print("Waveform analysis completed!\n")
 
 
     def save_minimum_table(self, table_name):

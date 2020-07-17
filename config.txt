@@ -10,4 +10,4 @@ minimum_gap=0.004
 minimum_n_close=100
 ---- Plots ----
 show_plot=False
-save_plot=False
+save_plot=True

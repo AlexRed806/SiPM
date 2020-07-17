@@ -54,7 +54,24 @@ _wf_dict_ = wf_dict()
 
 
 #runs the algorithm
-n_ev = int(sys.argv[6]) if (len(sys.argv)==7 and int(sys.argv[6])>0) else 1000000
-_waveform_.find_all_minima(n_ev,_wf_dict_["baseline_method"],(int)(_wf_dict_["baseline_n_points"]),(int)(_wf_dict_["minimum_method"]),(int)(_wf_dict_["minimum_search_range"]),(int)(_wf_dict_["minimum_back_shift"]),(int)(_wf_dict_["minimum_n_points"]),(float)(_wf_dict_["minimum_gap"]),(int)(_wf_dict_["minimum_n_close"]),_wf_dict_["show_plot"],_wf_dict_["save_plot"],sys.argv[5])
+#n_ev = int(sys.argv[6]) if (len(sys.argv)==7 and int(sys.argv[6])>0) else 1000000
+event_list = []
+if len(sys.argv) == 7:
+    try:
+        val = int(sys.argv[6])
+        print("You gave a numer of events as input, analyzing events from 0 to", val)
+        event_list = [int(i) for i in range(val)]
+    except ValueError:
+        try:
+            val = str(sys.argv[6])
+            text_file = open(val, "r")
+            lines = text_file.read().split('\n')
+            text_file.close()
+            event_list = [int(i) for i in lines[:-1]]
+            print("You gave file with a list of ecents as input, analyzing",len(event_list),"events:", event_list)
+        except ValueError:
+            print("No valid input given for event list, analyzing all events")
+
+_waveform_.find_all_minima(event_list,_wf_dict_["baseline_method"],(int)(_wf_dict_["baseline_n_points"]),(int)(_wf_dict_["minimum_method"]),(int)(_wf_dict_["minimum_search_range"]),(int)(_wf_dict_["minimum_back_shift"]),(int)(_wf_dict_["minimum_n_points"]),(float)(_wf_dict_["minimum_gap"]),(int)(_wf_dict_["minimum_n_close"]),_wf_dict_["show_plot"],_wf_dict_["save_plot"],sys.argv[5])
 
 _waveform_.save_minimum_table(sys.argv[5])

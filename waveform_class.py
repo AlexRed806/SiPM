@@ -58,19 +58,24 @@ class Waveform ():
         #plt.axis([-100, 1100, -0.0000001, 0.000005]) # Set axis limits
         #plt.show()
 
-    def event_minima(self, ev, counter, bsl_method, bsl_n_points, min_method, min_search_range, min_back_shift, min_n_points, min_gap, min_n_close, show_plot, save_plot, folder_name):
+    def event_minima(self, event, bsl_method, bsl_n_points, min_method, min_search_range, min_back_shift, min_n_points, min_gap, min_n_close, show_plot, save_plot, folder_name):
         ''' find minima of a single event (a snippet of the waveform table) '''
         do_plot = show_plot or save_plot
-
         if do_plot: fig, ax = plt.subplots()
 
-        ev_waveform = self.table_waveform.loc[counter*self.wf_data_points : counter*self.wf_data_points+self.wf_data_points-1]
+        ev_waveform = self.table_waveform.loc[event*self.wf_data_points : event*self.wf_data_points+self.wf_data_points-1]
         #ev_waveform["CH1"] = ev_waveform["CH1"].replace(to_replace="-inf",value=ev_waveform.min())
         ev_waveform["CH1"].replace({(float)("-inf"): np.nanmin(ev_waveform[ev_waveform != -np.inf])}, inplace=True)
 
         minimum_list = argrelextrema(ev_waveform.CH1.values, np.less_equal, order=min_search_range)[0]
+        minimum_list = list(minimum_list)
         #THIS IS WHERE THE WARNING IS
+        #ev_waveform.at[minimum_list, 'min'] = ev_waveform.loc[minimum_list, 'CH1']
+        #ev_waveform.loc[minimum_list].at['min'] = ev_waveform.loc[minimum_list, 'CH1']
+        #print(ev_waveform.at[minimum_list,"CH1"])
         ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
+        #ev_waveform.at[:,'min'] = ev_waveform.loc[minimum_list,'CH1']
+        #ev_waveform.insert(loc=minimum_list, column="min", value="CH1")
 
         baseline = 0
         if bsl_method==0: baseline = find_baseline_method_0(ev_waveform,bsl_n_points)
@@ -91,9 +96,8 @@ class Waveform ():
             ax.axhline(baseline, c='b')
             if show_plot: plt.show()
 
-            # name = 'ev' + str(ev) + '.png'
             if save_plot:
-                name = '{0}/ev{1}.png'.format(folder_name,ev)
+                name = '{0}/ev{1}.png'.format(folder_name,event)
                 fig.savefig(name)
             plt.close(fig)
 
@@ -103,9 +107,9 @@ class Waveform ():
         ev_waveform = ev_waveform.drop_duplicates(subset='clean_min',keep='first')
 
         #adding the event number as a cloumn
-        ev_waveform["Event"] = ev
+        ev_waveform["Event"] = event
         #adding the Timestamp
-        ev_waveform["Timestamp"] = float(self.table_timestamp[ self.table_timestamp['Event'] == ev ]["Timestamp"]) + ev_waveform["TIME"]
+        ev_waveform["Timestamp"] = float(self.table_timestamp[ self.table_timestamp['Event'] == event ]["Timestamp"]) + ev_waveform["TIME"]
         #adding the baseline
         ev_waveform["Baseline"] = baseline
         #adding the amplitude
@@ -114,26 +118,29 @@ class Waveform ():
         return ev_waveform
 
 
-    def find_all_minima(self, n_ev, bsl_method, bsl_n_points, min_method, min_search_range=50, min_back_shift=100, min_n_points=100, min_gap=0.003, min_n_close = 100, show_plot=False, save_plot=False, folder_name='plots'):
+    def find_all_minima(self, ev_list, bsl_method, bsl_n_points, min_method, min_search_range=50, min_back_shift=100, min_n_points=100, min_gap=0.003, min_n_close = 100, show_plot=False, save_plot=False, folder_name='plots'):
 
-        counter = 0
-        n_ev = (int)(min(n_ev,self.number_of_events))
+        if ev_list == []:
+            ev_list = [int(i) for i in range(len(self.table_timestamp))]
+        n_ev = len(ev_list)
 
         if save_plot and not os.path.exists(folder_name): os.mkdir(folder_name)
 
         print("-------------------------------------")
         print("Analyzing the waveforms to get minima")
         print("-------------------------------------")
+        counter = 0
         bar = progressbar.ProgressBar(maxval=n_ev, \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
         bar.start()
-        for ev in self.table_timestamp["Event"]:
+        #for ev in self.table_timestamp["Event"]:
+        for event in ev_list:
 
-            ev_waveform = self.event_minima(ev, counter, bsl_method, bsl_n_points, min_method, min_search_range, min_back_shift, min_n_points, min_gap, min_n_close, show_plot, save_plot, folder_name)
+            ev_waveform = self.event_minima(event, bsl_method, bsl_n_points, min_method, min_search_range, min_back_shift, min_n_points, min_gap, min_n_close, show_plot, save_plot, folder_name)
             self.table_global = pd.concat([self.table_global,ev_waveform],ignore_index=True)
             bar.update(counter+1)
             sleep(0.1)
-            if counter == n_ev-1: break
+            #if counter == n_ev-1: break
             counter+=1
         bar.finish()
         print("-------------------------------------\n")

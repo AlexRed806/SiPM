@@ -41,7 +41,7 @@ class Peak ():
         #.. and define the list of events to loop over accordingly
         bursts_startsing_events = []
         if saturating_events_only:
-            bursts_startsing_events = self.table_minima[self.table_minima["Amplitude"] > self.table_minima["Amplitude"].max()*0.99].index
+            bursts_startsing_events = self.table_minima[self.table_minima["Amplitude"] > self.table_minima["Amplitude"].max()*0.9].index
         else:
             bursts_startsing_events = self.table_minima.index[:len(self.table_minima)-2]
 
@@ -50,6 +50,7 @@ class Peak ():
         burst_idx = []
         #.. and a global variable for the integrated total time of these bursts
         bursts_time = 0
+        n_bursts = 0
             # then for every saturating peak (or all events if exclude_bursts = 1)..
         for event_idx in bursts_startsing_events:
             #for event_idx in table_minima.index[:len(table_minima)-1]:
@@ -71,8 +72,9 @@ class Peak ():
                 bursts_time += single_burst_time
                 # then adds the events in the list of indexes of bursts
                 burst_idx += list(single_burst.index)
-
-                print("Found a burst of",single_burst_time,"s, with",len(single_burst),"events in it -> excluded from the list of peaks")
+                # finally increases the counter and prints a message
+                n_bursts += 1
+                print("Found a burst of at event",single_burst.index[0],self.table_minima.at[single_burst.index[0],'Amplitude'],"of",single_burst_time,"s, with",len(single_burst),"events in it -> excluded from the list of peaks")
         # print the table(s)
         if verbose:
             print("\nTable of burst peaks")
@@ -83,7 +85,7 @@ class Peak ():
         if verbose:
             print("New table of peaks")
             print(self.table_minima.describe(),"\n")
-        return bursts_time
+        return n_bursts, bursts_time
 
 
     def plot_dark_count(self,ampl_bin_range,show_plot=False,save_plot=False,sipm_name="R00029",ov="2"):

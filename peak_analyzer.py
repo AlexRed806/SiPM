@@ -19,7 +19,11 @@ ov = sys.argv[3] # over voltage value (2-5)
 
 # initialize the class, and define the burst time
 _peak_ = Peak(sys.argv[1],False)
+n_bursts = 0
 bursts_time = 0
+
+#calculate run time (to compute rates)
+run_time = _peak_.table_minima["Timestamp"].iloc[len(_peak_.table_minima)-1]
 
 # check if we have to exclude bursts from the table..
 n_min_burst_ev = 50
@@ -28,11 +32,13 @@ if (int)(sys.argv[4]) == 0:
     print("Event bursts will not be removed")
 elif (int)(sys.argv[4]) == 1:
     print("Removing event bursts after a saturating event")
-    bursts_time = _peak_.exclude_bursts(True,n_min_burst_ev)
+    n_bursts, bursts_time = _peak_.exclude_bursts(True,n_min_burst_ev)
+    print("Number of bursts:",n_bursts,"; burst rate",n_bursts/run_time)
     print("Total integrated time of bursts:",bursts_time,"\n")
 elif (int)(sys.argv[4]) == 2:
     print("Removing all event bursts")
-    bursts_time = _peak_.exclude_bursts(False,n_min_burst_ev)
+    n_bursts, bursts_time = _peak_.exclude_bursts(False,n_min_burst_ev)
+    print("Number of bursts:",n_bursts,"; burst rate",n_bursts/run_time)
     print("Total integrated time of bursts:",bursts_time,"\n")
 else:
     print("ERROR: invalid value for exclude_bursts parameter, chose 0, 1, or 2")
@@ -43,7 +49,6 @@ else:
 dark_count_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]>1e-6) ])
 dark_count_error = np.sqrt(dark_count_rate)
 print("Dark counts = ",dark_count_rate)
-run_time = _peak_.table_minima["Timestamp"].iloc[len(_peak_.table_minima)-1]
 run_time -= bursts_time
 print("Total run time = ",run_time)
 dark_count_rate /= run_time

@@ -26,7 +26,8 @@ bursts_time = 0
 run_time = _peak_.table_minima["Timestamp"].iloc[len(_peak_.table_minima)-1]
 
 # check if we have to exclude bursts from the table..
-n_min_burst_ev = 50
+n_min_burst_ev = 20
+max_hreshold = 0.9
 
 if (int)(sys.argv[4]) == 0:
     print("Event bursts will not be removed")
@@ -44,19 +45,25 @@ else:
     print("ERROR: invalid value for exclude_bursts parameter, chose 0, 1, or 2")
     sys.exit()
 
-# now we calculate the dark count rate
+# now we calculate the dark count and cross talk rates
 # definition of dark count based on discussion during the meetings
 dark_count_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]>1e-6) ])
 dark_count_error = np.sqrt(dark_count_rate)
-print("Dark counts = ",dark_count_rate)
+cross_talk_rate = len(_peak_.table_minima[ (_peak_.table_minima["Amplitude"]>0.003) ])
+cross_talk_error = np.sqrt(cross_talk_rate)
+print("Dark counts =",dark_count_rate)
+print("Cross talk events =",cross_talk_rate)
 run_time -= bursts_time
 print("Total run time = ",run_time)
 dark_count_rate /= run_time
 dark_count_error /= run_time
-print("Dark count rate = ",dark_count_rate,"+/-",dark_count_error,"\n")
+cross_talk_rate /= run_time
+cross_talk_error /= run_time
+print("Dark count rate =",dark_count_rate,"+/-",dark_count_error)
+print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error,"\n")
 
 # now that we are done with calculation, it's time to plot!
-ampl_bin_range = [0,0.05]
+ampl_bin_range = [0,0.02]
 _peak_.plot_dark_count(ampl_bin_range,True,True,sipm_name,ov)
 
 time_n_bins = 1000

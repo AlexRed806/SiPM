@@ -35,13 +35,14 @@ class Peak ():
             print(self.table_minima.describe(),"\n")
 
 
-    def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, verbose=False):
+    def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, threshold=0.95, verbose=False):
 
         #check if we want to exclude bursts after saturating events or all events,..
         #.. and define the list of events to loop over accordingly
         bursts_startsing_events = []
         if saturating_events_only:
-            bursts_startsing_events = self.table_minima[self.table_minima["Amplitude"] > self.table_minima["Amplitude"].max()*0.9].index
+            bursts_startsing_events = self.table_minima[self.table_minima["Amplitude"] > self.table_minima["Amplitude"].max()*threshold].index
+            print ("saturating event indexes:",bursts_startsing_events)
         else:
             bursts_startsing_events = self.table_minima.index[:len(self.table_minima)-2]
 

@@ -48,28 +48,39 @@ else:
 # Now, time to plot!
 # First we plot amplitude, and obtain the value of the fist pe in V
 ampl_n_bins = 400
-first_pe =_peak_.plot_amplitude(ampl_n_bins,False,False,sipm_name,ov,False,False)
+first_pe =_peak_.plot_amplitude(ampl_n_bins,False,False,sipm_name,ov,True,False)
 print("First photoelectron peak found at",first_pe,"V")
+first_pe = first_pe*1.35
+after_pulse_end = 1e-6
 # now use such value to calculate the dark count and cross talk rates
 # definition of dark count based on discussion during the meetings
-dark_count_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]>1e-6) ])
+dark_count_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]>after_pulse_end) ])
 dark_count_error = np.sqrt(dark_count_rate)
-cross_talk_rate = len(_peak_.table_minima[ (_peak_.table_minima["Amplitude"]>first_pe*1.5) ])
+cross_talk_rate = len(_peak_.table_minima[ (_peak_.table_minima["Amplitude"]>first_pe) ])
 cross_talk_error = np.sqrt(cross_talk_rate)
+after_pulse_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]<after_pulse_end) & (_peak_.table_minima["Amplitude"]<first_pe) ])
+after_pulse_error = np.sqrt(after_pulse_rate)
 print("Dark counts =",dark_count_rate)
 print("Cross talk events =",cross_talk_rate)
+print("After pulses =",after_pulse_rate)
 run_time -= bursts_time
 print("Total run time = ",run_time)
 dark_count_rate /= run_time
 dark_count_error /= run_time
 cross_talk_rate /= run_time
 cross_talk_error /= run_time
+after_pulse_rate /= run_time
+after_pulse_error /= run_time
 print("Dark count rate =",dark_count_rate,"+/-",dark_count_error)
-print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error,"\n")
+print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error)
+print("After pulse rate =",after_pulse_rate,"+/-",after_pulse_error,"\n")
 
 # now that we are done with calculation, it's time to plot the DCR and time
-ampl_bin_range = [0,0.02]
-_peak_.plot_dark_count(ampl_bin_range,True,True,sipm_name,ov)
+ampl_bin_range = [0,0.05]
+_peak_.plot_dark_count(ampl_bin_range,True,False,sipm_name,ov,True,first_pe,after_pulse_end)
 
 time_n_bins = 1000
-_peak_.plot_times(time_n_bins,True,True,sipm_name,ov)
+_peak_.plot_times(time_n_bins,True,False,sipm_name,ov)
+
+# finnaly, we show all plots
+plt.show()

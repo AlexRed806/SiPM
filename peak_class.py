@@ -178,7 +178,7 @@ class Peak ():
             if len(bin_content) == 0 or max(bin_content) < 3:
                 return
 
-            max_bin = bin_center[bin_content==max(bin_content[0:ampl_n_bins/10])][0]
+            max_bin = bin_center[bin_content==max(bin_content[0:int(ampl_n_bins/10)])][0]
             max_bin_center.append(max_bin)
 
             start_searching_from = max_bin + max_bin_center[0]/2.
@@ -209,7 +209,7 @@ class Peak ():
             if save_fit_results:
                 ofile_name =  "pe_fit_" + sipm_name + "_OV" + ov + ".txt"
                 my_ofile = open(ofile_name,"w")
-                print >> my_ofile, "pe mu sigma"
+                print("pe mu sigma",file=my_ofile)
 
             # now loop over the maxima and fit them
             fit_counter = 1
@@ -223,7 +223,7 @@ class Peak ():
                     #fit_bounds = [ [0,np.inf],[min(fit_bin_range),max(fit_bin_range)],[0,np.inf] ]
                     fit_bounds = [ [0,min(fit_bin_range),0],[0.1,max(fit_bin_range),np.inf] ]
                     popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
-                    if save_fit_results: print >> my_ofile, fit_counter, popt[1], popt[2]
+                    if save_fit_results: print (fit_counter, popt[1], popt[2], file=my_ofile)
                     axes.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
                 except: print("Failed at fitting peak on bin",max_index,"!")
                 fit_counter += 1
@@ -239,3 +239,5 @@ class Peak ():
         if save_plot:
             fig_name = "Amplitude_" + sipm_name + "_OV" + ov + ".pdf"
             fig.savefig(fig_name)
+
+        return max_bin_center[0]

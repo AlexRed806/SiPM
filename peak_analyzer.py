@@ -83,4 +83,4 @@ time_n_bins = 1000
 _peak_.plot_times(time_n_bins,True,False,sipm_name,ov)
 
 # finnaly, we show all plots
-#plt.show()
+plt.show()

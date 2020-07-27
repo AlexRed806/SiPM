@@ -127,6 +127,7 @@ class Peak ():
         locmin = matplotlib.ticker.LogLocator(base=10.0, subs=(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9), numticks=10)
         axes_dcr[1].xaxis.set_minor_locator(locmin)
         axes_dcr[1].xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        axes_dcr[1].grid(True, lw=0.5,which="both")
 
         plt.tight_layout()
         plt.subplots_adjust(hspace=0)
@@ -147,11 +148,13 @@ class Peak ():
         axes_t[0].set_ylabel("counts")
         axes_t[0].set_xlabel("Timestamp (s)")
         axes_t[0].hist(self.table_minima["Timestamp"],histtype="step",bins=time_n_bins)
+        axes_t[0].grid(True, lw=0.5,which="both")
 
         axes_t[1].set_xlabel(r"$N_{event}$")
         axes_t[1].set_ylabel(r"$\Delta$t (s)")
         self.table_minima = self.table_minima.reset_index()
         axes_t[1].step(self.table_minima.index,self.table_minima["DeltaT"])#,marker=".")#,facecolors="none",edgecolors="black")
+        axes_t[1].grid(True, lw=0.5,which="both")
 
         plt.tight_layout()
         if show_plot: plt.draw()

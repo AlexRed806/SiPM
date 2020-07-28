@@ -7,7 +7,7 @@ n_coincidences = 0
 coinc = 0
 
 for x in table_1['Timestamp']:
-        coinc = len(table_2[ abs(table_2['Timestamp'] - x) < 0.00000001])
+        coinc = len(table_2[ abs(table_2['Timestamp'] - x) < 0.0000001])
         #print(coinc)
         if coinc == 1: n_coincidences += 1
         if coinc >1: print ("Too many")

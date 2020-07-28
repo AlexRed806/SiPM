@@ -35,7 +35,7 @@ class Peak ():
             print(self.table_minima.describe(),"\n")
 
 
-    def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, threshold=0.95, verbose=False):
+    def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, max_burst_delay=0.1, threshold=0.95, verbose=False):
 
         #check if we want to exclude bursts after saturating events or all events,..
         #.. and define the list of events to loop over accordingly
@@ -60,7 +60,7 @@ class Peak ():
             #.. creates a table of all following peaks..
             after_saturation = self.table_minima.loc[event_idx:]
             #.. checks what is the first peak in the table of following peaks that is more then 0.1 sec away
-            if any(after_saturation["DeltaT"].loc[event_idx+1:] > 0.1):
+            if any(after_saturation["DeltaT"].loc[event_idx+1:] > max_burst_delay):
                 end_of_burst = after_saturation[after_saturation["DeltaT"] > 0.1].loc[event_idx+1:].index[0]
             else:
                 end_of_burst = after_saturation.loc[event_idx+1:].index[-1]
@@ -152,7 +152,7 @@ class Peak ():
 
         axes_t[1].set_xlabel(r"$N_{event}$")
         axes_t[1].set_ylabel(r"$\Delta$t (s)")
-        self.table_minima = self.table_minima.reset_index()
+        #self.table_minima = self.table_minima.reset_index()
         axes_t[1].step(self.table_minima.index,self.table_minima["DeltaT"])#,marker=".")#,facecolors="none",edgecolors="black")
         axes_t[1].grid(True, lw=0.5,which="both")
 

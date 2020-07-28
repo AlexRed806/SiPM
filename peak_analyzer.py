@@ -27,18 +27,19 @@ run_time = _peak_.table_minima["Timestamp"].iloc[len(_peak_.table_minima)-1]
 
 # check if we have to exclude bursts from the table..
 n_min_burst_ev = 20
-max_hreshold = 0.9
+max_burst_delay = 0.2
+max_threshold = 0.9
 
 if (int)(sys.argv[4]) == 0:
     print("Event bursts will not be removed")
 elif (int)(sys.argv[4]) == 1:
     print("Removing event bursts after a saturating event")
-    n_bursts, bursts_time = _peak_.exclude_bursts(True,n_min_burst_ev)
+    n_bursts, bursts_time = _peak_.exclude_bursts(True,n_min_burst_ev,max_burst_delay,max_threshold)
     print("Number of bursts:",n_bursts,"; burst rate",n_bursts/run_time)
     print("Total integrated time of bursts:",bursts_time,"\n")
 elif (int)(sys.argv[4]) == 2:
     print("Removing all event bursts")
-    n_bursts, bursts_time = _peak_.exclude_bursts(False,n_min_burst_ev)
+    n_bursts, bursts_time = _peak_.exclude_bursts(False,n_min_burst_ev,max_burst_delay)
     print("Number of bursts:",n_bursts,"; burst rate",n_bursts/run_time)
     print("Total integrated time of bursts:",bursts_time,"\n")
 else:
@@ -76,7 +77,7 @@ print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error)
 print("After pulse rate =",after_pulse_rate,"+/-",after_pulse_error,"\n")
 
 # now that we are done with calculation, it's time to plot the DCR and time
-ampl_bin_range = [0,0.05]
+ampl_bin_range = [0,0.0175]
 _peak_.plot_dark_count(ampl_bin_range,True,False,sipm_name,ov,True,first_pe,after_pulse_end)
 
 time_n_bins = 1000

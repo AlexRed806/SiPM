@@ -52,7 +52,7 @@ ampl_n_bins = 400
 first_pe =_peak_.plot_amplitude(ampl_n_bins,False,False,sipm_name,ov,True,False)
 print("First photoelectron peak found at",first_pe,"V")
 first_pe = first_pe*1.35
-after_pulse_end = 1e-6
+after_pulse_end = 4e-6
 # now use such value to calculate the dark count and cross talk rates
 # definition of dark count based on discussion during the meetings
 dark_count_rate = len(_peak_.table_minima[ (_peak_.table_minima["DeltaT"]>after_pulse_end) ])
@@ -77,11 +77,11 @@ print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error)
 print("After pulse rate =",after_pulse_rate,"+/-",after_pulse_error,"\n")
 
 # now that we are done with calculation, it's time to plot the DCR and time
-ampl_bin_range = [0,0.0175]
+ampl_bin_range = [0,0.005]
 _peak_.plot_dark_count(ampl_bin_range,True,False,sipm_name,ov,True,first_pe,after_pulse_end)
 
-time_n_bins = 1000
-_peak_.plot_times(time_n_bins,True,False,sipm_name,ov)
+bins_per_sec = 1
+_peak_.plot_times(bins_per_sec,True,False,sipm_name,ov)
 
 # finnaly, we show all plots
 plt.show()

@@ -139,15 +139,18 @@ class Peak ():
         if not show_plot: plt.close(fig_dcr)
 
 
-    def plot_times(self,time_n_bins,show_plot=False,save_plot=False,sipm_name="R00029",ov="2"):
+    def plot_times(self,bins_per_sec,show_plot=False,save_plot=False,sipm_name="R00029",ov="2"):
 
+        n_bins = int(self.table_minima["Timestamp"].loc[len(self.table_minima)-1]) + 1
+        n_bins = int(bins_per_sec*n_bins)
+        
         fig_t, axes_t = plt.subplots(2, sharex=False, gridspec_kw={'height_ratios': [1, 1]})
         figure_title = sipm_name + "  -  OV = " + str(ov) + "V"
         axes_t[0].set_title(figure_title)
         axes_t[0].set_yscale("log")
         axes_t[0].set_ylabel("counts")
         axes_t[0].set_xlabel("Timestamp (s)")
-        axes_t[0].hist(self.table_minima["Timestamp"],histtype="step",bins=time_n_bins)
+        axes_t[0].hist(self.table_minima["Timestamp"],histtype="step",bins=n_bins)
         axes_t[0].grid(True, lw=0.5,which="both")
 
         axes_t[1].set_xlabel(r"$N_{event}$")

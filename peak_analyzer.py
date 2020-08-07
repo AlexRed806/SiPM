@@ -77,7 +77,7 @@ print("Cross talk rate =",cross_talk_rate,"+/-",cross_talk_error)
 print("After pulse rate =",after_pulse_rate,"+/-",after_pulse_error,"\n")
 
 # now that we are done with calculation, it's time to plot the DCR and time
-ampl_bin_range = [0,0.005]
+ampl_bin_range = [0,0.035]
 _peak_.plot_dark_count(ampl_bin_range,True,False,sipm_name,ov,True,first_pe,after_pulse_end)
 
 bins_per_sec = 1

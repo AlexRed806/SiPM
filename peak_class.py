@@ -35,7 +35,7 @@ class Peak ():
             print(self.table_minima.describe(),"\n")
 
 
-    def exclude_bursts(self, saturating_events_only=False, n_min_burst_ev=50, max_burst_delay=0.1, threshold=0.95, verbose=False):
+    def exclude_bursts(self, n_min_burst_ev=50, max_burst_delay=0.1, min_burst_delay=4e-4, saturating_events_only=False, threshold=0.95, verbose=False):
 
         #check if we want to exclude bursts after saturating events or all events,..
         #.. and define the list of events to loop over accordingly
@@ -52,16 +52,18 @@ class Peak ():
         #.. and a global variable for the integrated total time of these bursts
         bursts_time = 0
         n_bursts = 0
-            # then for every saturating peak (or all events if exclude_bursts = 1)..
+        # then for every saturating peak (or all events if exclude_bursts = 1)..
         for event_idx in bursts_startsing_events:
             #for event_idx in table_minima.index[:len(table_minima)-1]:
             #.. checks if the peak index is not already in a burst..
-            if event_idx in burst_idx: continue
+            if event_idx in burst_idx or self.table_minima["DeltaT"].loc[event_idx] < min_burst_delay: continue
             #.. creates a table of all following peaks..
-            after_saturation = self.table_minima.loc[event_idx:]
+            after_saturation = self.table_minima[self.table_minima["DeltaT"] > min_burst_delay].loc[event_idx:]
+            if len(after_saturation) < 2: continue
+            #after_saturation = self.table_minima.loc[event_idx:]
             #.. checks what is the first peak in the table of following peaks that is more then 0.1 sec away
             if any(after_saturation["DeltaT"].loc[event_idx+1:] > max_burst_delay):
-                end_of_burst = after_saturation[after_saturation["DeltaT"] > 0.1].loc[event_idx+1:].index[0]
+                end_of_burst = after_saturation[after_saturation["DeltaT"] > max_burst_delay].loc[event_idx+1:].index[0]
             else:
                 end_of_burst = after_saturation.loc[event_idx+1:].index[-1]
             #.. and puts all events between the former and the latter in a table called burst
@@ -140,8 +142,9 @@ class Peak ():
 
 
     def plot_times(self,bins_per_sec,show_plot=False,save_plot=False,sipm_name="R00029",ov="2"):
-
-        n_bins = int(self.table_minima["Timestamp"].loc[len(self.table_minima)-1]) + 1
+        # COMMENT THIS LINE TO KEEP BURSTS IN TIME HISTO
+        self.table_minima = self.table_minima.reset_index()
+        n_bins = int(self.table_minima["Timestamp"].iloc[-1] + 1)
         n_bins = int(bins_per_sec*n_bins)
         
         fig_t, axes_t = plt.subplots(2, sharex=False, gridspec_kw={'height_ratios': [1, 1]})
@@ -149,12 +152,13 @@ class Peak ():
         axes_t[0].set_title(figure_title)
         axes_t[0].set_yscale("log")
         axes_t[0].set_ylabel("counts")
-        axes_t[0].set_xlabel("Timestamp (s)")
+        axes_t[0].set_xlabel("Time (s)")
         axes_t[0].hist(self.table_minima["Timestamp"],histtype="step",bins=n_bins)
         axes_t[0].grid(True, lw=0.5,which="both")
 
         axes_t[1].set_xlabel(r"$N_{event}$")
         axes_t[1].set_ylabel(r"$\Delta$t (s)")
+        ## COMMENT THIS LINE TO KEEP BURSTS IN TIME HISTO
         #self.table_minima = self.table_minima.reset_index()
         axes_t[1].step(self.table_minima.index,self.table_minima["DeltaT"])#,marker=".")#,facecolors="none",edgecolors="black")
         axes_t[1].grid(True, lw=0.5,which="both")

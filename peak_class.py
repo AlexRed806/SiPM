@@ -35,7 +35,7 @@ class Peak ():
             print(self.table_minima.describe(),"\n")
 
 
-    def exclude_bursts(self, n_min_burst_ev=50, max_burst_delay=0.1, min_burst_delay=4e-4, saturating_events_only=False, threshold=0.95, verbose=False):
+    def exclude_bursts(self, n_min_burst_ev=50, max_burst_delay=0.1, min_burst_delay=4e-4,min_burst_frequency=10, saturating_events_only=False, threshold=0.95, verbose=False):
 
         #check if we want to exclude bursts after saturating events or all events,..
         #.. and define the list of events to loop over accordingly
@@ -52,6 +52,7 @@ class Peak ():
         #.. and a global variable for the integrated total time of these bursts
         bursts_time = 0
         n_bursts = 0
+
         # then for every saturating peak (or all events if exclude_bursts = 1)..
         for event_idx in bursts_startsing_events:
             #for event_idx in table_minima.index[:len(table_minima)-1]:
@@ -66,18 +67,20 @@ class Peak ():
                 end_of_burst = after_saturation[after_saturation["DeltaT"] > max_burst_delay].loc[event_idx+1:].index[0]
             else:
                 end_of_burst = after_saturation.loc[event_idx+1:].index[-1]
-            #.. and puts all events between the former and the latter in a table called burst
+            # puts all events between the former and the latter in a table called burst
             single_burst = after_saturation.loc[event_idx:end_of_burst]
-            # now if this burst has more than 10 events..
-            if len(single_burst) > n_min_burst_ev:
-                # it calculates the time, and adds it up to the total time of bursts
-                single_burst_time = single_burst["Timestamp"].loc[end_of_burst] - single_burst["Timestamp"].loc[event_idx]
+            # and calculates the burst time
+            single_burst_time = single_burst["Timestamp"].loc[end_of_burst] - single_burst["Timestamp"].loc[event_idx]
+            # now if this burst satisfies our conditions
+            if len(single_burst) > n_min_burst_ev and len(single_burst)/single_burst_time > min_burst_frequency:
+                # we add the burst time to the total time of bursts
                 bursts_time += single_burst_time
-                # then adds the events in the list of indexes of bursts
+                # then adds the events in the list of indexes of bursts, if burst frequency is above threslhold
                 burst_idx += list(single_burst.index)
                 # finally increases the counter and prints a message
                 n_bursts += 1
                 print("Found a burst of at event",single_burst.index[0],self.table_minima.at[single_burst.index[0],'Amplitude'],"of",single_burst_time,"s, with",len(single_burst),"events in it -> excluded from the list of peaks")
+
         # print the table(s)
         if verbose:
             print("\nTable of burst peaks")
@@ -91,7 +94,7 @@ class Peak ():
         return n_bursts, bursts_time
 
 
-    def plot_dark_count(self,ampl_bin_range,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",draw_lines=True,first_pe=0.015,after_pulse_end=1e-6):
+    def plot_dark_count(self,ampl_bin_range,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",draw_lines=True,first_pe=0.015,after_pulse_end=2e-6):
 
         # first we need to create a dummy plot to get the binning
         fig_dummy,axes_dummy = plt.subplots()
@@ -146,7 +149,7 @@ class Peak ():
         self.table_minima = self.table_minima.reset_index()
         n_bins = int(self.table_minima["Timestamp"].iloc[-1] + 1)
         n_bins = int(bins_per_sec*n_bins)
-        
+
         fig_t, axes_t = plt.subplots(2, sharex=False, gridspec_kw={'height_ratios': [1, 1]})
         figure_title = sipm_name + "  -  OV = " + str(ov) + "V"
         axes_t[0].set_title(figure_title)
@@ -171,7 +174,7 @@ class Peak ():
         if not show_plot: plt.close(fig_t)
 
 
-    def plot_amplitude(self,ampl_n_bins=1000,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",do_fit=True,save_fit_results=False):
+    def plot_amplitude(self,ampl_n_bins=1000,n_ampl_peaks=1,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",do_fit=True,save_fit_results=False):
         save_fit_results = do_fit and save_fit_results
 
         fig_a, axes_a = plt.subplots()
@@ -188,16 +191,15 @@ class Peak ():
         # adjust length (bin center was taken from edges so it's n+1)
         bin_center = bin_center[:-1]
         bin_center_dictionary = {}
-        # creates a dictionary to retrieve bin index from its central calue
+        # creates a dictionary to retrieve bin index from its central value
         for idx in range(len(bin_center)):
             bin_center_dictionary[bin_center[idx]] = idx
-
         # define a function that recursively looks for maxima in sliding slices of the histogram
         def find_hist_peaks(bin_center, bin_content):
             if len(bin_content) == 0 or max(bin_content) < 3:
                 return
 
-            max_bin = bin_center[bin_content==max(bin_content[0:int(ampl_n_bins/10)])][0]
+            max_bin = bin_center[bin_content==max(bin_content[0:int(ampl_n_bins/n_ampl_peaks)])][0]
             max_bin_center.append(max_bin)
 
             start_searching_from = max_bin + max_bin_center[0]/2.
@@ -241,8 +243,10 @@ class Peak ():
                 try:
                     #fit_bounds = [ [0,np.inf],[min(fit_bin_range),max(fit_bin_range)],[0,np.inf] ]
                     fit_bounds = [ [0,min(fit_bin_range),0],[0.1,max(fit_bin_range),np.inf] ]
-                    popt, _ = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
+                    popt, pcov = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
                     if save_fit_results: print (fit_counter, popt[1], popt[2], file=my_ofile)
+                    #Print fit resutls (Tommaso)
+                    print("Amplitude distribution fitting parameters of peak No ", fit_counter,"\nmu ",popt[1], "\nmu error ", np.sqrt(pcov[1,1]), "\nsigma ",  popt[2],"\nsigma error", np.sqrt(pcov[2,2]))
                     axes_a.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
                 except: print("Failed at fitting peak on bin",max_index,"!")
                 fit_counter += 1

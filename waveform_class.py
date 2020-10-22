@@ -206,19 +206,14 @@ def clean_minima_method_1(waveform,index_list,maximum_list,baseline,gap=0.005,n_
     idx_list_clean = []
 #    wavemaxes=waveform["TIME"].iloc[]
     for index in index_list:
-#        min=waveform["TIME"].iat[index]
-#        wavemax=wavemaxes[wavemaxes>min]
-#        wavemin=wavemaxes[wavemaxes<min]
 
-#        if baseline - waveform["CH1"].iloc[index] > gap and (wavemax.min()-wavemin.max())>3e-7:
-        #print(waveform[waveform["TIME"].iloc[maximum_list]>waveform["TIME"].iloc[index]]["TIME"])
-        # print(maximum_list)
-        # print( waveform[ waveform["TIME"]  > waveform["TIME"].iloc[index]]["TIME"])
-        #print( waveform[ waveform["TIME"]  > waveform["TIME"].iloc[index]]["TIME"].iloc[maximum_list])
+        has_max_after_min = True
+        max_after_min = waveform.iloc[maximum_list][waveform["TIME"].iloc[maximum_list] > waveform["TIME"].iloc[index]]["TIME"]
+        if len(max_after_min)>0:
+            max_after_min_delta_t = max_after_min.iloc[0]
+            has_max_after_min = max_after_min_delta_t >= 3e-7
 
-        #after_saturation = self.table_minima[self.table_minima["DeltaT"] > min_burst_delay].loc[event_idx:]
-
-        if baseline - waveform["CH1"].iloc[index] > gap :#and (min(waveform["TIME"].iloc[waveform.iloc[maximum_list]['TIME']>waveform["TIME"].iloc[index]]))>3e-7:
+        if baseline - waveform["CH1"].iloc[index] > gap and has_max_after_min:
 
             idx_list_above_bsl.append(index)
     return idx_list_above_bsl

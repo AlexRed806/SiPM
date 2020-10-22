@@ -68,7 +68,7 @@ if len(sys.argv) == 7:
             lines = text_file.read().split('\n')
             text_file.close()
             event_list = [int(i) for i in lines[:-1]]
-            print("You gave file with a list of ecents as input, analyzing",len(event_list),"events:", event_list)
+            print("You gave file with a list of events as input, analyzing",len(event_list),"events:", event_list)
         except:
             print("Please give a number of events or a path to file with event list, stopping")
             sys.exit()

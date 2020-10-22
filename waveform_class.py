@@ -10,6 +10,7 @@ import sys
 import os
 # import statistics
 # from statistics import mean
+    #   CH1 REPLACED WITH CH1 FOR FBK11 ANALYSIS
 
 class Waveform ():
 
@@ -22,7 +23,7 @@ class Waveform ():
         self.table_timestamp = pd.read_csv(timestamp_filename)
 
         # changes the header of the timestamp file
-        #if self.table_timestamp.columns[0] == "X: (s)":
+        # if self.table_timestamp.columns[0] == "X: (s)":
         self.table_timestamp.rename(columns={'X: (s)':'Event','Y: (Hits)':'DeltaT'},inplace=True)
         self.number_of_events = len(self.table_timestamp)
 
@@ -44,7 +45,7 @@ class Waveform ():
         #add column for absolute timestamp
         self.table_timestamp.at[0,'Timestamp'] = self.table_timestamp.iloc[0]['DeltaT']
 
-        #calculating the timptamp
+        #calculating the timestamp
         for index in self.table_timestamp.index[1:]:
             self.table_timestamp.at[index,"Timestamp"] = self.table_timestamp.at[index-1,"Timestamp"] + self.table_timestamp.at[index,"DeltaT"]
         #defining the number of data points in a waveform
@@ -68,8 +69,10 @@ class Waveform ():
         ev_waveform["CH1"].replace({(float)("-inf"): np.nanmin(ev_waveform[ev_waveform != -np.inf])}, inplace=True)
 
         minimum_list = argrelextrema(ev_waveform.CH1.values, np.less_equal, order=min_search_range)[0]
+#        maximum_list = argrelextrema(ev_waveform.CH1.values, np.greater, order=min_search_range)[0]
 
         ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
+
         # alternative method
         #minimum_list_idx = ev_waveform.iloc[minimum_list].index
         #ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
@@ -189,12 +192,19 @@ def clean_minima_method_1(waveform,index_list,baseline,gap=0.005,n_close=100):
             idx_list_above_bsl.append(index)
     return idx_list_above_bsl
 
+# def clean_minima_method_1(waveform,index_list,maximum_list,baseline,gap=0.005,n_close=100):
+#     idx_list_above_bsl = []
+#     idx_list_clean = []
+#     for index in index_list:
+#         if baseline - waveform["CH1"].iloc[index] > gap and (waveform.min(["Timestamp"].iloc[waveform["Timestamp"]>waveform["Timestamp"].iloc[index])])-waveform.max(["Timestamp"].iloc[max(waveform["Timestamp"]>waveform["Timestamp"].iloc[index])]))<2e-8:
+#             idx_list_above_bsl.append(index)
+#     return idx_list_above_bsl
 
 def find_baseline_method_0(waveform,n_firsts=100):
     waveform_start = waveform.iloc[0:n_firsts]
     return np.polyfit(waveform_start["TIME"],waveform_start["CH1"],0)[0]
 
 def find_baseline_method_1(waveform,n_before=100):
-    maxch1 = waveform["CH1"].loc[n_before:].idxmax()
-    waveform_near_max = waveform.loc[maxch1-n_before:maxch1]
+    wfmax = waveform["CH1"].loc[n_before:].idxmax()
+    waveform_near_max = waveform.loc[wfmax-n_before:wfmax]
     return np.polyfit(waveform_near_max["TIME"],waveform_near_max["CH1"],0)[0]

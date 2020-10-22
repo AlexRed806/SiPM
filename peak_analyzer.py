@@ -58,8 +58,8 @@ else:
 # First we plot amplitude, and obtain the value of the fist pe in V
 ampl_n_bins = 400
 n_ampl_peaks = 1
-first_pe =_peak_.plot_amplitude(ampl_n_bins,n_ampl_peaks,False,False,sipm_name,ov,True,False)
-print("First photoelectron peak found at",first_pe,"V")
+first_pe =_peak_.plot_amplitude(ampl_n_bins,n_ampl_peaks,False,False,sipm_name,ov,True,True,False)
+print("First photoelectron peak found at",first_pe,"V\n")
 first_pe = first_pe*1.35
 after_pulse_end = 4e-6
 # now use such value to calculate the dark count and cross talk rates

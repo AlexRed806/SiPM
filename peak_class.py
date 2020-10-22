@@ -174,8 +174,9 @@ class Peak ():
         if not show_plot: plt.close(fig_t)
 
 
-    def plot_amplitude(self,ampl_n_bins=1000,n_ampl_peaks=1,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",do_fit=True,save_fit_results=False):
+    def plot_amplitude(self,ampl_n_bins=1000,n_ampl_peaks=1,show_plot=False,save_plot=False,sipm_name="R00029",ov="2",do_fit=True,print_fit_results=False,save_fit_results=False):
         save_fit_results = do_fit and save_fit_results
+        print_fit_results = do_fit and print_fit_results
 
         fig_a, axes_a = plt.subplots()
         figure_title = sipm_name + "  -  OV = " + str(ov) + "V"
@@ -246,7 +247,8 @@ class Peak ():
                     popt, pcov = optimize.curve_fit(gaussian, fit_bin_range, fit_bin_values, maxfev=10000, bounds=fit_bounds)
                     if save_fit_results: print (fit_counter, popt[1], popt[2], file=my_ofile)
                     #Print fit resutls (Tommaso)
-                    print("Amplitude distribution fitting parameters of peak No ", fit_counter,"\nmu ",popt[1], "\nmu error ", np.sqrt(pcov[1,1]), "\nsigma ",  popt[2],"\nsigma error", np.sqrt(pcov[2,2]))
+                    if print_fit_results:
+                        print("Amplitude distribution fitting parameters of peak No",fit_counter,": mu =","{:.2e}".format(popt[1]), "+/-","{:.2e}".format((np.sqrt(pcov[1,1]))),"; sigma = ","{:.2e}".format(popt[2]),"+/-","{:.2e}".format(np.sqrt(pcov[2,2])))
                     axes_a.plot(fit_bin_range, gaussian(fit_bin_range, *popt), linewidth=1, color="orange")
                 except: print("Failed at fitting peak on bin",max_index,"!")
                 fit_counter += 1

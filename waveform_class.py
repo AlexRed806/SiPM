@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.signal import argrelextrema
+from scipy.signal import medfilt
 from pandas import DataFrame
 import time
 from time import sleep
@@ -68,10 +69,14 @@ class Waveform ():
 
         ev_waveform["CH1"].replace({(float)("-inf"): np.nanmin(ev_waveform[ev_waveform != -np.inf])}, inplace=True)
 
+        # median filter (Tommaso)
+        # ev_waveform["CH1"]=medfilt(ev_waveform["CH1"],51)
+
         minimum_list = argrelextrema(ev_waveform.CH1.values, np.less_equal, order=min_search_range)[0]
-#        maximum_list = argrelextrema(ev_waveform.CH1.values, np.greater, order=min_search_range)[0]
+        maximum_list = argrelextrema(ev_waveform.CH1.values, np.greater_equal, order=min_search_range)[0]
 
         ev_waveform.loc[:,'min'] = ev_waveform.iloc[minimum_list]['CH1']
+        ev_waveform.loc[:,'max'] = ev_waveform.iloc[maximum_list]['CH1']
 
         # alternative method
         #minimum_list_idx = ev_waveform.iloc[minimum_list].index
@@ -85,9 +90,11 @@ class Waveform ():
 
         clean_minimum_list = []
         if min_method==0: clean_minimum_list = clean_minima_method_0(ev_waveform,minimum_list,min_back_shift,min_n_points,min_gap)
-        elif min_method==1: clean_minimum_list = clean_minima_method_1(ev_waveform,minimum_list,baseline,min_gap,min_n_close)
+        # elif min_method==1: clean_minimum_list = clean_minima_method_1(ev_waveform,minimum_list,baseline,min_gap,min_n_close)
+        elif min_method==1: clean_minimum_list = clean_minima_method_1(ev_waveform,minimum_list,maximum_list,baseline,min_gap,min_n_close)
 
         ev_waveform.loc[:,'clean_min'] = ev_waveform.iloc[clean_minimum_list]['CH1']
+
         # alternative method
         #clean_minimum_list_idx = ev_waveform.iloc[clean_minimum_list].index
         #ev_waveform.at[clean_minimum_list_idx,'clean_min'] = ev_waveform.loc[clean_minimum_list_idx]['CH1']
@@ -97,6 +104,7 @@ class Waveform ():
             #ax.plot(ev_waveform.index, ev_waveform['CH1'], marker="2", linestyle="-", linewidth=1)
             ax.plot(ev_waveform.index, ev_waveform['CH1'], linestyle="-", linewidth=1)
             ax.scatter(ev_waveform.index, ev_waveform['min'], marker='o', s=10, c='r')
+            ax.scatter(ev_waveform.index, ev_waveform['max'], marker='o', s=10, c='b')
             ax.scatter(ev_waveform.index, ev_waveform['clean_min'], marker='o', s=50, c='g')
             ax.axhline(baseline, c='b')
             if show_plot: plt.show()
@@ -135,7 +143,8 @@ class Waveform ():
         print("Analyzing the waveforms to get minima")
         print("-------------------------------------")
         counter = 0
-        bar = progressbar.ProgressBar(maxval=n_ev, \
+        bar = progressbar.ProgressBar(        #print( ev_waveform[ ev_waveform["TIME"]  > ev_waveform["TIME"].iloc[minimum_list]]["TIME"].iloc[maximum_list])
+maxval=n_ev, \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
         bar.start()
         #for ev in self.table_timestamp["Event"]:
@@ -184,21 +193,35 @@ def clean_minima_method_0(waveform,index_list,n_previous=50,n_check=100,gap=0.00
             idx_list_clean.append(index)
     return idx_list_clean
 
-def clean_minima_method_1(waveform,index_list,baseline,gap=0.005,n_close=100):
-    idx_list_above_bsl = []
-    idx_list_clean = []
-    for index in index_list:
-        if baseline - waveform["CH1"].iloc[index] > gap:# and len(waveform[index-1:index])-1 > n_close:
-            idx_list_above_bsl.append(index)
-    return idx_list_above_bsl
-
-# def clean_minima_method_1(waveform,index_list,maximum_list,baseline,gap=0.005,n_close=100):
+# def clean_minima_method_1(waveform,index_list,baseline,gap=0.005,n_close=100):
 #     idx_list_above_bsl = []
 #     idx_list_clean = []
 #     for index in index_list:
-#         if baseline - waveform["CH1"].iloc[index] > gap and (waveform.min(["Timestamp"].iloc[waveform["Timestamp"]>waveform["Timestamp"].iloc[index])])-waveform.max(["Timestamp"].iloc[max(waveform["Timestamp"]>waveform["Timestamp"].iloc[index])]))<2e-8:
+#         if baseline - waveform["CH1"].iloc[index] > gap:# and len(waveform[index-1:index])-1 > n_close:
 #             idx_list_above_bsl.append(index)
 #     return idx_list_above_bsl
+#
+def clean_minima_method_1(waveform,index_list,maximum_list,baseline,gap=0.005,n_close=100):
+    idx_list_above_bsl = []
+    idx_list_clean = []
+#    wavemaxes=waveform["TIME"].iloc[]
+    for index in index_list:
+#        min=waveform["TIME"].iat[index]
+#        wavemax=wavemaxes[wavemaxes>min]
+#        wavemin=wavemaxes[wavemaxes<min]
+
+#        if baseline - waveform["CH1"].iloc[index] > gap and (wavemax.min()-wavemin.max())>3e-7:
+        #print(waveform[waveform["TIME"].iloc[maximum_list]>waveform["TIME"].iloc[index]]["TIME"])
+        # print(maximum_list)
+        # print( waveform[ waveform["TIME"]  > waveform["TIME"].iloc[index]]["TIME"])
+        #print( waveform[ waveform["TIME"]  > waveform["TIME"].iloc[index]]["TIME"].iloc[maximum_list])
+
+        #after_saturation = self.table_minima[self.table_minima["DeltaT"] > min_burst_delay].loc[event_idx:]
+
+        if baseline - waveform["CH1"].iloc[index] > gap :#and (min(waveform["TIME"].iloc[waveform.iloc[maximum_list]['TIME']>waveform["TIME"].iloc[index]]))>3e-7:
+
+            idx_list_above_bsl.append(index)
+    return idx_list_above_bsl
 
 def find_baseline_method_0(waveform,n_firsts=100):
     waveform_start = waveform.iloc[0:n_firsts]
